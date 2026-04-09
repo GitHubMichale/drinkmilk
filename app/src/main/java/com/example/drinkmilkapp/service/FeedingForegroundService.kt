@@ -51,7 +51,7 @@ class FeedingForegroundService : Service() {
         if (refreshJob == null) {
             refreshJob = serviceScope.launch {
                 while (isActive) {
-                    refreshNotification()
+                    refreshNotificationSuspend()
                     delay(60_000)
                 }
             }
@@ -59,15 +59,17 @@ class FeedingForegroundService : Service() {
     }
 
     private fun refreshNotification() {
-        serviceScope.launch {
-            repository.initializeIfNeeded()
-            val lastTime = repository.lastFeedingTimeFlow.first()
-            val uiState = repository.buildUiState(lastTime)
-            NotificationManagerCompat.from(this@FeedingForegroundService).notify(
-                NotificationHelper.NOTIFICATION_ID,
-                NotificationHelper.buildNotification(this@FeedingForegroundService, uiState)
-            )
-        }
+        serviceScope.launch { refreshNotificationSuspend() }
+    }
+
+    private suspend fun refreshNotificationSuspend() {
+        repository.initializeIfNeeded()
+        val lastTime = repository.lastFeedingTimeFlow.first()
+        val uiState = repository.buildUiState(lastTime)
+        NotificationManagerCompat.from(this@FeedingForegroundService).notify(
+            NotificationHelper.NOTIFICATION_ID,
+            NotificationHelper.buildNotification(this@FeedingForegroundService, uiState)
+        )
     }
 
     override fun onDestroy() {

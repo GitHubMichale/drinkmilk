@@ -48,6 +48,11 @@ class FeedingRepository(private val store: FeedingStore) {
         val safeDiff = diffMillis.coerceAtLeast(0)
         val hours = TimeUnit.MILLISECONDS.toHours(safeDiff)
         val minutes = TimeUnit.MILLISECONDS.toMinutes(safeDiff) % 60
-        return "${hours}小时${minutes}分"
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(safeDiff) % 60
+        return when {
+            hours > 0 -> "${hours}小时${minutes}分${seconds}秒"
+            minutes > 0 -> "${minutes}分${seconds}秒"
+            else -> "${seconds}秒"
+        }
     }
 }

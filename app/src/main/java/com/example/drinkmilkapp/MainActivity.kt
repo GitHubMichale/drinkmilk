@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -76,7 +75,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun FeedingScreen(repository: FeedingRepository) {
     var lastFeedingTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var currentElapsedText by remember { mutableStateOf("0小时0分") }
+    var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
@@ -87,10 +86,10 @@ private fun FeedingScreen(repository: FeedingRepository) {
         }
     }
 
-    LaunchedEffect(lastFeedingTime) {
+    LaunchedEffect(Unit) {
         while (true) {
-            currentElapsedText = repository.formatElapsed(System.currentTimeMillis() - lastFeedingTime)
-            delay(60_000)
+            nowMillis = System.currentTimeMillis()
+            delay(1_000)
         }
     }
 
@@ -108,7 +107,7 @@ private fun FeedingScreen(repository: FeedingRepository) {
             style = MaterialTheme.typography.headlineSmall
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "已过去 $currentElapsedText")
+        Text(text = "已过去 ${repository.formatElapsed(nowMillis - lastFeedingTime)}")
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = {
             coroutineScope.launch {
