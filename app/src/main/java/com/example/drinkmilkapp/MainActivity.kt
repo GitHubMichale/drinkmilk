@@ -24,12 +24,14 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.drinkmilkapp.data.FeedingStore
+import com.example.drinkmilkapp.domain.FeedingChild
 import com.example.drinkmilkapp.domain.FeedingRepository
 import com.example.drinkmilkapp.service.FeedingForegroundService
 import com.example.drinkmilkapp.ui.theme.DrinkMilkAppTheme
@@ -74,15 +76,17 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun FeedingScreen(repository: FeedingRepository) {
-    var lastFeedingTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var child1Time by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var child2Time by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         repository.initializeIfNeeded()
-        repository.lastFeedingTimeFlow.collect {
-            lastFeedingTime = it
+        repository.twinFeedingFlow.collect { (t1, t2) ->
+            child1Time = t1
+            child2Time = t2
         }
     }
 
@@ -100,22 +104,59 @@ private fun FeedingScreen(repository: FeedingRepository) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "上一次喂奶时间")
+        ChildFeedingBlock(
+            title = stringResource(R.string.child_1_label),
+            lastFeedingMillis = child1Time,
+            nowMillis = nowMillis,
+            repository = repository,
+            onMarkFed = {
+                coroutineScope.launch {
+                    repository.markFedNow(FeedingChild.CHILD_1)
+                    FeedingForegroundService.requestRefresh(context)
+                }
+            }
+        )
+        Spacer(modifier = Modifier.height(32.dp))
+        ChildFeedingBlock(
+            title = stringResource(R.string.child_2_label),
+            lastFeedingMillis = child2Time,
+            nowMillis = nowMillis,
+            repository = repository,
+            onMarkFed = {
+                coroutineScope.launch {
+                    repository.markFedNow(FeedingChild.CHILD_2)
+                    FeedingForegroundService.requestRefresh(context)
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ChildFeedingBlock(
+    title: String,
+    lastFeedingMillis: Long,
+    nowMillis: Long,
+    repository: FeedingRepository,
+    onMarkFed: () -> Unit
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = title, style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = repository.formatLastFeedingTime(lastFeedingTime),
+            text = repository.formatLastFeedingTime(lastFeedingMillis),
             style = MaterialTheme.typography.headlineSmall
         )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = stringResource(
+                R.string.elapsed_since,
+                repository.formatElapsed(nowMillis - lastFeedingMillis)
+            )
+        )
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "已过去 ${repository.formatElapsed(nowMillis - lastFeedingTime)}")
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(onClick = {
-            coroutineScope.launch {
-                repository.markFedNow()
-                FeedingForegroundService.requestRefresh(context)
-            }
-        }) {
-            Text(text = "已喂奶（立即更新）")
+        Button(onClick = onMarkFed) {
+            Text(text = stringResource(R.string.action_mark_fed_for, title))
         }
     }
 }

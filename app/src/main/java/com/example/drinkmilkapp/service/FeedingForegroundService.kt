@@ -40,11 +40,11 @@ class FeedingForegroundService : Service() {
     private fun startForegroundAndLoop() {
         serviceScope.launch {
             repository.initializeIfNeeded()
-            val lastTime = repository.lastFeedingTimeFlow.first()
-            val uiState = repository.buildUiState(lastTime)
+            val (t1, t2) = repository.twinFeedingFlow.first()
+            val state = repository.buildTwinUiState(t1, t2)
             startForeground(
                 NotificationHelper.NOTIFICATION_ID,
-                NotificationHelper.buildNotification(this@FeedingForegroundService, uiState)
+                NotificationHelper.buildNotification(this@FeedingForegroundService, state)
             )
         }
 
@@ -64,11 +64,11 @@ class FeedingForegroundService : Service() {
 
     private suspend fun refreshNotificationSuspend() {
         repository.initializeIfNeeded()
-        val lastTime = repository.lastFeedingTimeFlow.first()
-        val uiState = repository.buildUiState(lastTime)
+        val (t1, t2) = repository.twinFeedingFlow.first()
+        val state = repository.buildTwinUiState(t1, t2)
         NotificationManagerCompat.from(this@FeedingForegroundService).notify(
             NotificationHelper.NOTIFICATION_ID,
-            NotificationHelper.buildNotification(this@FeedingForegroundService, uiState)
+            NotificationHelper.buildNotification(this@FeedingForegroundService, state)
         )
     }
 

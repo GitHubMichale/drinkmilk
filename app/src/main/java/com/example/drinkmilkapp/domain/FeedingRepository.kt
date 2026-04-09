@@ -2,7 +2,6 @@
 
 import com.example.drinkmilkapp.data.FeedingStore
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -15,20 +14,23 @@ data class FeedingUiState(
     val elapsedText: String
 )
 
+data class TwinFeedingUiState(
+    val child1: FeedingUiState,
+    val child2: FeedingUiState
+)
+
 class FeedingRepository(private val store: FeedingStore) {
-    val lastFeedingTimeFlow: Flow<Long> = store.lastFeedingTimeMillisFlow.map { value ->
-        value ?: System.currentTimeMillis()
+    val twinFeedingFlow: Flow<Pair<Long, Long>> = store.twinLastFeedingMillisFlow.map { (c1, c2) ->
+        val now = System.currentTimeMillis()
+        (c1 ?: now) to (c2 ?: now)
     }
 
     suspend fun initializeIfNeeded() {
-        val current = store.lastFeedingTimeMillisFlow.firstOrNull()
-        if (current == null) {
-            store.setLastFeedingTimeMillis(System.currentTimeMillis())
-        }
+        store.ensureTwinInitialized()
     }
 
-    suspend fun markFedNow() {
-        store.setLastFeedingTimeMillis(System.currentTimeMillis())
+    suspend fun markFedNow(child: FeedingChild) {
+        store.setLastFeedingMillis(child, System.currentTimeMillis())
     }
 
     fun buildUiState(lastFeedingTimeMillis: Long, nowMillis: Long = System.currentTimeMillis()): FeedingUiState {
@@ -36,6 +38,17 @@ class FeedingRepository(private val store: FeedingStore) {
             lastFeedingTimeMillis = lastFeedingTimeMillis,
             lastFeedingTimeText = formatLastFeedingTime(lastFeedingTimeMillis),
             elapsedText = formatElapsed(nowMillis - lastFeedingTimeMillis)
+        )
+    }
+
+    fun buildTwinUiState(
+        child1Millis: Long,
+        child2Millis: Long,
+        nowMillis: Long = System.currentTimeMillis()
+    ): TwinFeedingUiState {
+        return TwinFeedingUiState(
+            child1 = buildUiState(child1Millis, nowMillis),
+            child2 = buildUiState(child2Millis, nowMillis)
         )
     }
 

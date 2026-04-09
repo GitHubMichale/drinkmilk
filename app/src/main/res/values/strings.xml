@@ -1,5 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">喂奶计时</string>
-    <string name="action_mark_fed">已喂奶</string>
+    <string name="child_1_label">大宝</string>
+    <string name="child_2_label">小宝</string>
+    <string name="notif_title">双孩喂奶</string>
+    <string name="notif_line_child">%1$s 上次 %2$s · 已过 %3$s</string>
+    <string name="action_mark_fed_child_1">大宝已喂</string>
+    <string name="action_mark_fed_child_2">小宝已喂</string>
+    <string name="action_mark_fed_for">%1$s 已喂奶</string>
+    <string name="elapsed_since">已过去 %1$s</string>
 </resources>
