@@ -8,6 +8,7 @@ import com.example.drinkmilkapp.domain.FeedingChild
 import com.example.drinkmilkapp.domain.FeedingRepository
 import com.example.drinkmilkapp.notification.NotificationHelper
 import com.example.drinkmilkapp.service.FeedingForegroundService
+import com.example.drinkmilkapp.widget.DualFeedingWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,9 +21,11 @@ class FeedActionReceiver : BroadcastReceiver() {
 
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
-            val repo = FeedingRepository(FeedingStore(context.applicationContext))
+            val appContext = context.applicationContext
+            val repo = FeedingRepository(FeedingStore(appContext))
             repo.markFedNow(child)
-            FeedingForegroundService.requestRefresh(context.applicationContext)
+            FeedingForegroundService.requestRefresh(appContext)
+            DualFeedingWidgetProvider.requestUpdate(appContext)
             pendingResult.finish()
         }
     }
