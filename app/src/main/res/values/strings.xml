@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">喂奶计时</string>
+    <string name="action_mark_fed">已喂奶</string>
+</resources>
