@@ -75,7 +75,7 @@ object NotificationHelper {
 
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_menu_recent_history)
-            .setContentTitle(context.getString(R.string.notif_title))
+            .setContentTitle(line1)
             .setContentText(line1)
             .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
