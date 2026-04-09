@@ -110,4 +110,5 @@
                 android:paddingRight="10dp" />
         </LinearLayout>
     </LinearLayout>
+    </LinearLayout>
 </LinearLayout>
